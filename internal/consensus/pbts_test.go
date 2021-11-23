@@ -220,7 +220,7 @@ func TestReceiveProposalWaitsForPreviousBlockTime(t *testing.T) {
 	// Check that the validator waited until after the proposer-based timestamp
 	// waitinTime bound.
 	assert.True(t, results.height2.prevoteIssuedAt.After(cfg.height2ProposalDeliverTime))
-	maxWaitingTime := cfg.genesisTime.Add(2 * cfg.timestampParams.Precision).Add(cfg.timestampParams.MsgDelay)
+	maxWaitingTime := cfg.genesisTime.Add(cfg.timestampParams.Precision).Add(cfg.timestampParams.MsgDelay)
 	assert.True(t, results.height2.prevoteIssuedAt.Before(maxWaitingTime))
 
 	// Check that the validator did not prevote for nil.
