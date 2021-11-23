@@ -205,8 +205,8 @@ func TestReceiveProposalWaitsForPreviousBlockTime(t *testing.T) {
 	initialTime := time.Now().Add(50 * time.Millisecond)
 	cfg := pbtsTestConfiguration{
 		timestampParams: types.TimestampParams{
-			Accuracy: 50 * time.Millisecond,
-			MsgDelay: 500 * time.Millisecond,
+			Precision: 100 * time.Millisecond,
+			MsgDelay:  500 * time.Millisecond,
 		},
 		timeoutPropose:             50 * time.Millisecond,
 		genesisTime:                initialTime,
@@ -220,7 +220,7 @@ func TestReceiveProposalWaitsForPreviousBlockTime(t *testing.T) {
 	// Check that the validator waited until after the proposer-based timestamp
 	// waitinTime bound.
 	assert.True(t, results.height2.prevoteIssuedAt.After(cfg.height2ProposalDeliverTime))
-	maxWaitingTime := cfg.genesisTime.Add(2 * cfg.timestampParams.Accuracy).Add(cfg.timestampParams.MsgDelay)
+	maxWaitingTime := cfg.genesisTime.Add(2 * cfg.timestampParams.Precision).Add(cfg.timestampParams.MsgDelay)
 	assert.True(t, results.height2.prevoteIssuedAt.Before(maxWaitingTime))
 
 	// Check that the validator did not prevote for nil.
@@ -239,8 +239,8 @@ func TestReceiveProposalTimesOutOnSlowDelivery(t *testing.T) {
 	initialTime := time.Now()
 	cfg := pbtsTestConfiguration{
 		timestampParams: types.TimestampParams{
-			Accuracy: 50 * time.Millisecond,
-			MsgDelay: 500 * time.Millisecond,
+			Precision: 100 * time.Millisecond,
+			MsgDelay:  500 * time.Millisecond,
 		},
 		timeoutPropose:             50 * time.Millisecond,
 		genesisTime:                initialTime,
@@ -253,7 +253,7 @@ func TestReceiveProposalTimesOutOnSlowDelivery(t *testing.T) {
 
 	// Check that the validator waited until after the proposer-based timestamp
 	// waitinTime bound.
-	maxWaitingTime := initialTime.Add(2 * cfg.timestampParams.Accuracy).Add(cfg.timestampParams.MsgDelay)
+	maxWaitingTime := initialTime.Add(cfg.timestampParams.Precision).Add(cfg.timestampParams.MsgDelay)
 	assert.True(t, results.height2.prevoteIssuedAt.After(maxWaitingTime))
 
 	// Ensure that the validator issued a prevote for nil.
