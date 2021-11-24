@@ -14,26 +14,37 @@ func TestScanner(t *testing.T) {
 		input string
 		want  []syntax.Token
 	}{
-		// Empty input.
+		// Empty inputs
 		{"", nil},
 		{"  ", nil},
 		{"\t\n ", nil},
 
+		// Numbers
 		{`0 123`, []syntax.Token{syntax.TNumber, syntax.TNumber}},
 		{`0.32 3.14`, []syntax.Token{syntax.TNumber, syntax.TNumber}},
 
 		// Tags
 		{`foo foo.bar`, []syntax.Token{syntax.TTag, syntax.TTag}},
+
+		// Strings (values)
 		{` '' x 'x' 'x y'`, []syntax.Token{syntax.TString, syntax.TTag, syntax.TString, syntax.TString}},
 		{` 'you are not your job' `, []syntax.Token{syntax.TString}},
+
+		// Comparison operators
 		{`< <= = > >=`, []syntax.Token{
 			syntax.TLt, syntax.TLeq, syntax.TEq, syntax.TGt, syntax.TGeq,
 		}},
+
+		// Mixed values of various kinds.
 		{`x AND y`, []syntax.Token{syntax.TTag, syntax.TAnd, syntax.TTag}},
 		{`x.y CONTAINS 'z'`, []syntax.Token{syntax.TTag, syntax.TContains, syntax.TString}},
 		{`foo EXISTS`, []syntax.Token{syntax.TTag, syntax.TExists}},
 		{`and AND`, []syntax.Token{syntax.TTag, syntax.TAnd}},
+
+		// Timestamp
 		{`TIME 2021-11-23T15:16:17Z`, []syntax.Token{syntax.TTime}},
+
+		// Datestamp
 		{`DATE 2021-11-23`, []syntax.Token{syntax.TDate}},
 	}
 
@@ -79,6 +90,8 @@ func TestScannerErrors(t *testing.T) {
 	}
 }
 
+// These parser tests were copied from the original implementation of the query
+// parser, and are preserved here as a compatibility check.
 func TestParseValid(t *testing.T) {
 	tests := []struct {
 		input string
