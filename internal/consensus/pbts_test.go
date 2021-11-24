@@ -47,6 +47,8 @@ type pbtsTestHarness struct {
 
 	currentHeight int64
 	currentRound  int32
+
+	t *testing.T
 }
 
 type pbtsTestConfiguration struct {
@@ -95,10 +97,11 @@ func newPBTSTestHarness(t *testing.T, tc pbtsTestConfiguration) pbtsTestHarness 
 		ensureProposalCh:  subscribe(cs.eventBus, types.EventQueryCompleteProposal),
 		blockCh:           subscribe(cs.eventBus, types.EventQueryNewBlock),
 		ensureVoteCh:      subscribeToVoterBuffered(cs, pubKey.Address()),
+		t:                 t,
 	}
 }
 
-func (p *pbtsTestHarness) genesisHeight(t *testing.T) {
+func (p *pbtsTestHarness) genesisHeight() {
 	p.validatorClock.On("Now").Return(p.config.height2ProposedBlockTime).Times(8)
 
 	startTestRound(p.observedState, p.currentHeight, p.currentRound)
@@ -117,12 +120,12 @@ func (p *pbtsTestHarness) genesisHeight(t *testing.T) {
 	incrementHeight(p.otherValidators...)
 }
 
-func (p *pbtsTestHarness) height2(t *testing.T) heightResult {
+func (p *pbtsTestHarness) height2() heightResult {
 	signer := p.otherValidators[0].PrivValidator
 	return p.nextHeight(t, signer, p.config.height2ProposalDeliverTime, p.config.height2ProposedBlockTime, time.Now())
 }
 
-func (p *pbtsTestHarness) nextHeight(t *testing.T, proposer types.PrivValidator, deliverTime, proposedTime, nextProposedTime time.Time) heightResult {
+func (p *pbtsTestHarness) nextHeight(proposer types.PrivValidator, deliverTime, proposedTime, nextProposedTime time.Time) heightResult {
 	p.validatorClock.On("Now").Return(nextProposedTime).Times(8)
 	pubKey, err := p.observedValidator.PrivValidator.GetPubKey(context.Background())
 	assert.NoError(t, err)
@@ -196,9 +199,9 @@ func collectResults(t *testing.T, eb *types.EventBus, address []byte) <-chan hei
 	return resultCh
 }
 
-func (p *pbtsTestHarness) run(t *testing.T) resultSet {
-	p.genesisHeight(t)
-	r2 := p.height2(t)
+func (p *pbtsTestHarness) run() resultSet {
+	p.genesisHeight()
+	r2 := p.height2()
 	return resultSet{
 		height2: r2,
 	}
@@ -233,7 +236,7 @@ func TestReceiveProposalWaitsForPreviousBlockTime(t *testing.T) {
 	}
 
 	pbtsTest := newPBTSTestHarness(t, cfg)
-	results := pbtsTest.run(t)
+	results := pbtsTest.run()
 
 	// Check that the validator waited until after the proposer-based timestamp
 	// waitinTime bound.
