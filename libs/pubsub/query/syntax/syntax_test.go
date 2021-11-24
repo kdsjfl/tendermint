@@ -170,9 +170,21 @@ func TestParseValid(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		_, err := syntax.NewParser(strings.NewReader(test.input)).Parse()
+		q, err := syntax.NewParser(strings.NewReader(test.input)).Parse()
 		if test.valid != (err == nil) {
 			t.Errorf("Parse %#q: valid %v got err=%v", test.input, test.valid, err)
+		}
+
+		// For valid queries, check that the query round-trips.
+		if test.valid {
+			qstr := q.String()
+			r, err := syntax.NewParser(strings.NewReader(qstr)).Parse()
+			if err != nil {
+				t.Errorf("Reparse %#q failed: %v", qstr, err)
+			}
+			if rstr := r.String(); rstr != qstr {
+				t.Errorf("Reparse diff\nold: %#q\nnew: %#q", qstr, rstr)
+			}
 		}
 	}
 }
