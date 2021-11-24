@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+// Parse parses the specified query string. It is shorthand for constructing a
+// parser for s and calling its Parse method.
+func Parse(s string) (Query, error) {
+	return NewParser(strings.NewReader(s)).Parse()
+}
+
 // Query is the root of the parse tree for a query.  A query is the conjunction
 // of one or more conditions.
 type Query []Condition

@@ -170,7 +170,7 @@ func TestParseValid(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		q, err := syntax.NewParser(strings.NewReader(test.input)).Parse()
+		q, err := syntax.Parse(test.input)
 		if test.valid != (err == nil) {
 			t.Errorf("Parse %#q: valid %v got err=%v", test.input, test.valid, err)
 		}
@@ -178,7 +178,7 @@ func TestParseValid(t *testing.T) {
 		// For valid queries, check that the query round-trips.
 		if test.valid {
 			qstr := q.String()
-			r, err := syntax.NewParser(strings.NewReader(qstr)).Parse()
+			r, err := syntax.Parse(qstr)
 			if err != nil {
 				t.Errorf("Reparse %#q failed: %v", qstr, err)
 			}
