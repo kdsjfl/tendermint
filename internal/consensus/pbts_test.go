@@ -174,8 +174,7 @@ func (p *pbtsTestHarness) nextHeight(proposer types.PrivValidator, deliverTime, 
 
 	p.currentHeight++
 	incrementHeight(p.otherValidators...)
-	res := <-resultCh
-	return res
+	return <-resultCh
 }
 
 func collectResults(t *testing.T, eb *types.EventBus, address []byte) <-chan heightResult {
@@ -184,7 +183,7 @@ func collectResults(t *testing.T, eb *types.EventBus, address []byte) <-chan hei
 	voteSub, err := eb.SubscribeUnbuffered(context.Background(), "voteSubscriber", types.EventQueryVote)
 	assert.NoError(t, err)
 	go func() {
-		res := heightResult{}
+		var res heightResult
 		for {
 			voteMsg := <-voteSub.Out()
 			ts := time.Now()
