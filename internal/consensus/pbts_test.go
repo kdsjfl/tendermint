@@ -19,7 +19,7 @@ import (
 // pbtsTestHarness runs a series of consensus heights and captures timing of
 // various consensus events for use in testing the Proposer-Based Timestamp algorithm.
 type pbtsTestHarness struct {
-	s pbtsTestConfiguration
+	config pbtsTestConfiguration
 
 	// observedState is the single Tendermint consensus state machine being run during
 	// a run of the pbtsTestHarness.
@@ -84,7 +84,7 @@ func newPBTSTestHarness(t *testing.T, tc pbtsTestConfiguration) pbtsTestHarness 
 	assert.NoError(t, err)
 
 	return pbtsTestHarness{
-		s:                 tc,
+		config:            tc,
 		observedValidator: vss[0],
 		observedState:     cs,
 		otherValidators:   vss[1:],
@@ -99,7 +99,7 @@ func newPBTSTestHarness(t *testing.T, tc pbtsTestConfiguration) pbtsTestHarness 
 }
 
 func (p *pbtsTestHarness) genesisHeight(t *testing.T) {
-	p.validatorClock.On("Now").Return(p.s.height2ProposedBlockTime).Times(8)
+	p.validatorClock.On("Now").Return(p.config.height2ProposedBlockTime).Times(8)
 
 	startTestRound(p.observedState, p.currentHeight, p.currentRound)
 	ensureNewRound(t, p.roundCh, p.currentHeight, p.currentRound)
@@ -119,7 +119,7 @@ func (p *pbtsTestHarness) genesisHeight(t *testing.T) {
 
 func (p *pbtsTestHarness) height2(t *testing.T) heightResult {
 	signer := p.otherValidators[0].PrivValidator
-	return p.nextHeight(t, signer, p.s.height2ProposalDeliverTime, p.s.height2ProposedBlockTime, time.Now())
+	return p.nextHeight(t, signer, p.config.height2ProposalDeliverTime, p.config.height2ProposedBlockTime, time.Now())
 }
 
 func (p *pbtsTestHarness) nextHeight(t *testing.T, proposer types.PrivValidator, deliverTime, proposedTime, nextProposedTime time.Time) heightResult {
