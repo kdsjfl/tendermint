@@ -2451,8 +2451,8 @@ func proposalStepWaitingTime(lt tmtime.Source, bt time.Time, tp types.TimestampP
 	return wt.Sub(t)
 }
 
-func maxDuration(d1 time.Duration, d2 time.Duration) time.Duration {
-	if d1-d2 > 0 {
+func maxDuration(d1, d2 time.Duration) time.Duration {
+	if d1 >= d2 {
 		return d1
 	}
 	return d2
