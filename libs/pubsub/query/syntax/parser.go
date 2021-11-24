@@ -88,9 +88,9 @@ func (a *Arg) Time() time.Time {
 	var err error
 	switch a.Type {
 	case TDate:
-		ts, err = time.Parse("2006-01-02", a.text)
+		ts, err = ParseDate(a.text)
 	case TTime:
-		ts, err = time.Parse(time.RFC3339, a.text)
+		ts, err = ParseTime(a.text)
 	}
 	if err == nil {
 		return ts
@@ -196,4 +196,14 @@ func tokLabel(tokens []Token) string {
 		ss = append(ss, tok.String())
 	}
 	return strings.Join(ss, ", ") + "or " + tokens[last].String()
+}
+
+// ParseDate parses s as a date string in the format used by DATE values.
+func ParseDate(s string) (time.Time, error) {
+	return time.Parse("2006-01-02", s)
+}
+
+// ParseTime parses s as a timestamp in the format used by TIME values.
+func ParseTime(s string) (time.Time, error) {
+	return time.Parse(time.RFC3339, s)
 }
