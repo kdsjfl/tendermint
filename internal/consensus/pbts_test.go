@@ -16,15 +16,33 @@ import (
 	"github.com/tendermint/tendermint/types"
 )
 
+// pbtsTestHarness runs a series of consensus heights and captures timing of
+// various consensus events for use in testing the Proposer-Based Timestamp algorithm.
 type pbtsTestHarness struct {
-	s                 pbtsTestConfiguration
-	observedState     *State
+	s pbtsTestConfiguration
+
+	// observedState is the single Tendermint consensus state machine being run during
+	// a run of the pbtsTestHarness.
+	observedState *State
+
+	// observedValidator is a stub for signing votes and messages using the key
+	// from the observedState.
 	observedValidator *validatorStub
-	otherValidators   []*validatorStub
-	validatorClock    *tmtimemocks.Source
+
+	// otherValidators is a list of simulated validators that interact with the
+	// observedState and are fully controlled by the test harness.
+	otherValidators []*validatorStub
+
+	// validatorClock is the mock time source used by all of the validator stubs
+	// in the test harness.
+	// This mock clock allows the test harness to produce votes and blocks with arbitrary
+	// timestamps.
+	validatorClock *tmtimemocks.Source
 
 	chainID string
 
+	// channels for verifying that the observed validator completes certain actions
+	// during a run of the test harness.
 	ensureProposalCh, roundCh, blockCh, ensureVoteCh <-chan tmpubsub.Message
 
 	currentHeight int64
