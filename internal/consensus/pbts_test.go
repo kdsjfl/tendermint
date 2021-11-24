@@ -16,33 +16,33 @@ import (
 	"github.com/tendermint/tendermint/types"
 )
 
-// pbtsTestHarness runs a series of consensus heights and captures timing of
-// various consensus events for use in testing the Proposer-Based Timestamp algorithm.
+// pbtsTestHarness constructs a Tendermint network that can be used for testing the
+// implementation of the Proposer-Based timestamps algorithm.
+// It runs a series of consensus heights and captures timing of votes and events.
 type pbtsTestHarness struct {
+	// configuration options set by the user of the test harness.
 	config pbtsTestConfiguration
 
-	// observedState is the single Tendermint consensus state machine being run during
+	// The Tendermint consensus state machine being run during
 	// a run of the pbtsTestHarness.
 	observedState *State
 
-	// observedValidator is a stub for signing votes and messages using the key
+	// A stub for signing votes and messages using the key
 	// from the observedState.
 	observedValidator *validatorStub
 
-	// otherValidators is a list of simulated validators that interact with the
-	// observedState and are fully controlled by the test harness.
+	// A list of simulated validators that interact with the observedState and are
+	// fully controlled by the test harness.
 	otherValidators []*validatorStub
 
-	// validatorClock is the mock time source used by all of the validator stubs
-	// in the test harness.
+	// The mock time source used by all of the validator stubs in the test harness.
 	// This mock clock allows the test harness to produce votes and blocks with arbitrary
 	// timestamps.
 	validatorClock *tmtimemocks.Source
 
 	chainID string
 
-	// channels for verifying that the observed validator completes certain actions
-	// during a run of the test harness.
+	// channels for verifying that the observed validator completes certain actions.
 	ensureProposalCh, roundCh, blockCh, ensureVoteCh <-chan tmpubsub.Message
 
 	currentHeight int64
@@ -52,11 +52,20 @@ type pbtsTestHarness struct {
 }
 
 type pbtsTestConfiguration struct {
-	timestampParams            types.TimestampParams
-	timeoutPropose             time.Duration
-	genesisTime                time.Time
+	// The timestamp consensus parameters to be used by the state machine under test.
+	timestampParams types.TimestampParams
+
+	// The setting to use for the TimeoutPropose configuration parameter.
+	timeoutPropose time.Duration
+
+	// The timestamp of the first block produced by the network.
+	genesisTime time.Time
+
+	// The time at which the proposal at height 2 should be delivered.
 	height2ProposalDeliverTime time.Time
-	height2ProposedBlockTime   time.Time
+
+	// The timestamp of the block proposed at height 2.
+	height2ProposedBlockTime time.Time
 }
 
 func newPBTSTestHarness(t *testing.T, tc pbtsTestConfiguration) pbtsTestHarness {
