@@ -21,7 +21,7 @@ import (
 // It runs a series of consensus heights and captures timing of votes and events.
 type pbtsTestHarness struct {
 	// configuration options set by the user of the test harness.
-	config pbtsTestConfiguration
+	pbtsTestConfiguration
 
 	// The Tendermint consensus state machine being run during
 	// a run of the pbtsTestHarness.
@@ -95,23 +95,23 @@ func newPBTSTestHarness(t *testing.T, tc pbtsTestConfiguration) pbtsTestHarness 
 	assert.NoError(t, err)
 
 	return pbtsTestHarness{
-		config:            tc,
-		observedValidator: vss[0],
-		observedState:     cs,
-		otherValidators:   vss[1:],
-		validatorClock:    clock,
-		currentHeight:     1,
-		chainID:           cfg.ChainID(),
-		roundCh:           subscribe(cs.eventBus, types.EventQueryNewRound),
-		ensureProposalCh:  subscribe(cs.eventBus, types.EventQueryCompleteProposal),
-		blockCh:           subscribe(cs.eventBus, types.EventQueryNewBlock),
-		ensureVoteCh:      subscribeToVoterBuffered(cs, pubKey.Address()),
-		t:                 t,
+		pbtsTestConfiguration: tc,
+		observedValidator:     vss[0],
+		observedState:         cs,
+		otherValidators:       vss[1:],
+		validatorClock:        clock,
+		currentHeight:         1,
+		chainID:               cfg.ChainID(),
+		roundCh:               subscribe(cs.eventBus, types.EventQueryNewRound),
+		ensureProposalCh:      subscribe(cs.eventBus, types.EventQueryCompleteProposal),
+		blockCh:               subscribe(cs.eventBus, types.EventQueryNewBlock),
+		ensureVoteCh:          subscribeToVoterBuffered(cs, pubKey.Address()),
+		t:                     t,
 	}
 }
 
 func (p *pbtsTestHarness) genesisHeight() {
-	p.validatorClock.On("Now").Return(p.config.height2ProposedBlockTime).Times(8)
+	p.validatorClock.On("Now").Return(p.height2ProposedBlockTime).Times(8)
 
 	startTestRound(p.observedState, p.currentHeight, p.currentRound)
 	ensureNewRound(t, p.roundCh, p.currentHeight, p.currentRound)
@@ -131,7 +131,7 @@ func (p *pbtsTestHarness) genesisHeight() {
 
 func (p *pbtsTestHarness) height2() heightResult {
 	signer := p.otherValidators[0].PrivValidator
-	return p.nextHeight(t, signer, p.config.height2ProposalDeliverTime, p.config.height2ProposedBlockTime, time.Now())
+	return p.nextHeight(t, signer, p.height2ProposalDeliverTime, p.height2ProposedBlockTime, time.Now())
 }
 
 func (p *pbtsTestHarness) nextHeight(proposer types.PrivValidator, deliverTime, proposedTime, nextProposedTime time.Time) heightResult {
