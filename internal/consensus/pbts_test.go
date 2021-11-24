@@ -114,33 +114,33 @@ func (p *pbtsTestHarness) genesisHeight() {
 	p.validatorClock.On("Now").Return(p.height2ProposedBlockTime).Times(8)
 
 	startTestRound(p.observedState, p.currentHeight, p.currentRound)
-	ensureNewRound(t, p.roundCh, p.currentHeight, p.currentRound)
+	ensureNewRound(p.t, p.roundCh, p.currentHeight, p.currentRound)
 	propBlock, partSet := p.observedState.createProposalBlock()
 	bid := types.BlockID{Hash: propBlock.Hash(), PartSetHeader: partSet.Header()}
-	ensureProposal(t, p.ensureProposalCh, p.currentHeight, p.currentRound, bid)
-	ensurePrevote(t, p.ensureVoteCh, p.currentHeight, p.currentRound)
+	ensureProposal(p.t, p.ensureProposalCh, p.currentHeight, p.currentRound, bid)
+	ensurePrevote(p.t, p.ensureVoteCh, p.currentHeight, p.currentRound)
 	signAddVotes(p.observedState, tmproto.PrevoteType, p.chainID, bid, p.otherValidators...)
 
 	signAddVotes(p.observedState, tmproto.PrecommitType, p.chainID, bid, p.otherValidators...)
-	ensurePrecommit(t, p.ensureVoteCh, p.currentHeight, p.currentRound)
+	ensurePrecommit(p.t, p.ensureVoteCh, p.currentHeight, p.currentRound)
 
-	ensureNewBlock(t, p.blockCh, p.currentHeight)
+	ensureNewBlock(p.t, p.blockCh, p.currentHeight)
 	p.currentHeight++
 	incrementHeight(p.otherValidators...)
 }
 
 func (p *pbtsTestHarness) height2() heightResult {
 	signer := p.otherValidators[0].PrivValidator
-	return p.nextHeight(t, signer, p.height2ProposalDeliverTime, p.height2ProposedBlockTime, time.Now())
+	return p.nextHeight(signer, p.height2ProposalDeliverTime, p.height2ProposedBlockTime, time.Now())
 }
 
 func (p *pbtsTestHarness) nextHeight(proposer types.PrivValidator, deliverTime, proposedTime, nextProposedTime time.Time) heightResult {
 	p.validatorClock.On("Now").Return(nextProposedTime).Times(8)
 	pubKey, err := p.observedValidator.PrivValidator.GetPubKey(context.Background())
-	assert.NoError(t, err)
-	resultCh := collectResults(t, p.observedState.eventBus, pubKey.Address())
+	assert.NoError(p.t, err)
+	resultCh := collectResults(p.t, p.observedState.eventBus, pubKey.Address())
 
-	ensureNewRound(t, p.roundCh, p.currentHeight, p.currentRound)
+	ensureNewRound(p.t, p.roundCh, p.currentHeight, p.currentRound)
 
 	b, _ := p.observedState.createProposalBlock()
 	b.Height = p.currentHeight
@@ -148,7 +148,7 @@ func (p *pbtsTestHarness) nextHeight(proposer types.PrivValidator, deliverTime, 
 	b.Header.Time = proposedTime
 
 	k, err := proposer.GetPubKey(context.Background())
-	assert.NoError(t, err)
+	assert.NoError(p.t, err)
 	b.Header.ProposerAddress = k.Address()
 	ps := b.MakePartSet(types.BlockPartSizeBytes)
 	bid := types.BlockID{Hash: b.Hash(), PartSetHeader: ps.Header()}
@@ -156,21 +156,21 @@ func (p *pbtsTestHarness) nextHeight(proposer types.PrivValidator, deliverTime, 
 	tp := prop.ToProto()
 
 	if err := proposer.SignProposal(context.Background(), p.observedState.state.ChainID, tp); err != nil {
-		t.Fatalf("error signing proposal: %s", err)
+		p.t.Fatalf("error signing proposal: %s", err)
 	}
 
 	time.Sleep(time.Until(deliverTime))
 	prop.Signature = tp.Signature
 	if err := p.observedState.SetProposalAndBlock(prop, b, ps, "peerID"); err != nil {
-		t.Fatal(err)
+		p.t.Fatal(err)
 	}
-	ensureProposal(t, p.ensureProposalCh, p.currentHeight, 0, bid)
+	ensureProposal(p.t, p.ensureProposalCh, p.currentHeight, 0, bid)
 
-	ensurePrevote(t, p.ensureVoteCh, p.currentHeight, p.currentRound)
+	ensurePrevote(p.t, p.ensureVoteCh, p.currentHeight, p.currentRound)
 	signAddVotes(p.observedState, tmproto.PrevoteType, p.chainID, bid, p.otherValidators...)
 
 	signAddVotes(p.observedState, tmproto.PrecommitType, p.chainID, bid, p.otherValidators...)
-	ensurePrecommit(t, p.ensureVoteCh, p.currentHeight, p.currentRound)
+	ensurePrecommit(p.t, p.ensureVoteCh, p.currentHeight, p.currentRound)
 
 	p.currentHeight++
 	incrementHeight(p.otherValidators...)
@@ -278,7 +278,7 @@ func TestReceiveProposalTimesOutOnSlowDelivery(t *testing.T) {
 	}
 
 	pbtsTest := newPBTSTestHarness(t, cfg)
-	results := pbtsTest.run(t)
+	results := pbtsTest.run()
 
 	// Check that the validator waited until after the proposer-based timestamp
 	// waitinTime bound.
