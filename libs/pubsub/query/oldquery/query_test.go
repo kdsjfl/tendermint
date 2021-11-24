@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
-	"github.com/tendermint/tendermint/libs/pubsub/query"
+	query "github.com/tendermint/tendermint/libs/pubsub/query/oldquery"
 )
 
 func expandEvents(flattenedEvents map[string][]string) []abci.Event {
